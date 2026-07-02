@@ -7,7 +7,7 @@ var spawnSync = require('child_process').spawnSync;
 var port = parseInt(process.env.PORT || '8080', 10);
 var redisUri = process.env.COMPUTER_REDIS_URI || '127.0.0.1:6379';
 var disk = process.env.COMPUTER_IMG || '/data/disk.qcow2';
-var iso = process.env.COMPUTER_ISO || '/data/install.iso';
+var iso = process.env.COMPUTER_ISO || null;
 var diskSize = process.env.COMPUTER_DISK_SIZE || '3G';
 var children = [];
 
@@ -34,6 +34,28 @@ function childEnv(extra) {
   return Object.assign({
     COMPUTER_REDIS_URI: redisUri
   }, extra || {});
+}
+
+function waitForPort(port, host, callback) {
+  var started = Date.now();
+
+  function check() {
+    var socket = net.connect(port, host);
+    socket.on('connect', function() {
+      socket.destroy();
+      callback();
+    });
+    socket.on('error', function() {
+      socket.destroy();
+      if (Date.now() - started > 60000) {
+        console.error('timed out waiting for ' + host + ':' + port);
+        return shutdown(1);
+      }
+      setTimeout(check, 1000);
+    });
+  }
+
+  check();
 }
 
 function startProcesses() {
@@ -63,17 +85,20 @@ function startProcesses() {
     COMPUTER_DISPLAY: '0',
     COMPUTER_TCP: '127.0.0.1:4444'
   };
-  if (fs.existsSync(iso)) qemuEnv.COMPUTER_ISO = iso;
-  else console.log('no installer ISO found at ' + iso + '; booting from disk only');
+  if (iso && fs.existsSync(iso)) qemuEnv.COMPUTER_ISO = iso;
+  else if (iso) console.log('no installer ISO found at ' + iso + '; booting from disk only');
+  else console.log('no installer ISO configured; booting from disk only');
 
   spawnChild('qemu', 'node', ['qemu.js'], childEnv(qemuEnv));
 
-  spawnChild('emu', 'node', ['emu-runner.js'], childEnv({
-    COMPUTER_IMG: disk,
-    COMPUTER_VNC_HOST: '127.0.0.1',
-    COMPUTER_DISPLAY: '0',
-    COMPUTER_TCP: '127.0.0.1:4444'
-  }));
+  waitForPort(5900, '127.0.0.1', function() {
+    spawnChild('emu', 'node', ['emu-runner.js'], childEnv({
+      COMPUTER_IMG: disk,
+      COMPUTER_VNC_HOST: '127.0.0.1',
+      COMPUTER_DISPLAY: '0',
+      COMPUTER_TCP: '127.0.0.1:4444'
+    }));
+  });
 }
 
 function proxyHttp(req, res) {

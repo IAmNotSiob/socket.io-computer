@@ -6,7 +6,6 @@ primary_region = "iad"
 [env]
   NODE_ENV = "production"
   COMPUTER_IMG = "/data/disk.qcow2"
-  COMPUTER_ISO = "/data/install.iso"
   COMPUTER_DISK_SIZE = "3G"
 
 [processes]

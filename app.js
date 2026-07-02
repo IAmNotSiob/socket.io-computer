@@ -2,14 +2,13 @@
 var mustache = require('mustache-express');
 var express = require('express');
 var app = express();
-var redis = require('./redis').web();
+var redis = process.env.VERCEL && !process.env.COMPUTER_REDIS_URI
+  ? null
+  : require('./redis').web();
 
-var port = process.env.COMPUTER_IO_WEB_PORT || 5000;
+var port = process.env.COMPUTER_IO_WEB_PORT || process.env.PORT || 5000;
 
 process.title = 'socket.io-computer';
-
-app.listen(port);
-console.log('listening on *:' + port);
 
 app.engine('mustache', mustache());
 app.set('views', __dirname + '/views');
@@ -27,15 +26,30 @@ app.use(function(req, res, next) {
 
 var url = process.env.COMPUTER_IO_URL || 'http://localhost:6001';
 app.get('/', function(req, res, next) {
+  if (!redis) {
+    return renderIndex(res, null, 0);
+  }
+
   redis.get('computer:frame', function(err, image) {
     if (err) return next(err);
     redis.get('computer:connections-total', function(err, total) {
       if (err) return next(err);
-      res.render('index.mustache', {
-        img: image ? image.toString('base64') : '',
-        count: total,
-        io: url
-      });
+      renderIndex(res, image, total);
     });
   });
 });
+
+function renderIndex(res, image, total) {
+  res.render('index.mustache', {
+    img: image ? image.toString('base64') : '',
+    count: total || 0,
+    io: url
+  });
+}
+
+if (!process.env.VERCEL) {
+  app.listen(port);
+  console.log('listening on *:' + port);
+}
+
+module.exports = app;

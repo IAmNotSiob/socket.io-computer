@@ -4,7 +4,7 @@
 A collaborative virtual machine where players take turns in
 controlling it.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer) (may not be 100% compatible)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer&env=COMPUTER_IO_URL&envDescription=HTTPS%20Socket.IO%20URL%20for%20the%20Docker%20VM%20backend&envLink=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer%23vercel-demo)
 
 It works by running [qemu](http://wiki.qemu.org/Main_Page) on the
 server-side and streaming the image binary data to the browser.
@@ -83,6 +83,28 @@ If port `5000` is already in use on the host, remap it:
 COMPUTER_WEB_HOST_PORT=55000 \
 COMPUTER_IO_URL=http://YOUR_VPS_IP_OR_HOSTNAME:6001 \
 docker compose up --build
+```
+
+## Vercel demo
+
+Vercel can host the public web entrypoint for a real demo, but the VM backend
+still needs to run as the Docker stack because it uses QEMU, Redis, VNC, and a
+long-lived Socket.IO server. Deploy the Docker backend first, put TLS in front
+of the Socket.IO port, then set this Vercel environment variable:
+
+```bash
+COMPUTER_IO_URL=https://YOUR_BACKEND_HOST
+```
+
+Leave the Vercel root directory and output directory blank. Vercel runs
+`npm install` and `npm run vercel-build`, then serves `app.js` as the web
+entrypoint. The browser connects directly to `COMPUTER_IO_URL`, so the backend
+URL must be HTTPS/WSS when the Vercel site is HTTPS.
+
+For the backend, keep using Docker Compose on the VM host:
+
+```bash
+COMPUTER_IO_URL=https://YOUR_BACKEND_HOST docker compose up --build
 ```
 
 ## License

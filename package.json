@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "build": "browserify client/main.js > public/build.js",
+    "vercel-build": "npm run build",
     "start:web": "node app.js",
     "start:io": "node io.js",
     "start:presence": "node presence.js",

@@ -1,7 +1,7 @@
 /*global config,URL*/
 
 var $ = require('jquery');
-var io = require('socket.io-client')(config.io);
+var io = require('socket.io-client')(config.io, { path: config.ioPath || '/socket.io' });
 var keymap = require('./keymap');
 var blobToImage = require('./blob');
 var Queue = require('queue3');

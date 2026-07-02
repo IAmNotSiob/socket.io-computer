@@ -128,7 +128,19 @@ COMPUTER_IO_URL=https://YOUR_BACKEND_HOST
 Leave the Vercel root directory and output directory blank. Vercel runs
 `npm install` and `npm run vercel-build`, then serves `app.js` as the web
 entrypoint. The browser connects directly to `COMPUTER_IO_URL`, so the backend
-URL must be HTTPS/WSS when the Vercel site is HTTPS.
+URL must be HTTPS/WSS when the Vercel site is HTTPS. For this deployment, Caddy should expose Socket.IO at `https://mail.mickai.me/socket/` and proxy it to the backend on port `6001`.
+
+Example Caddy config:
+
+```caddyfile
+mail.mickai.me {
+  handle_path /socket/* {
+    reverse_proxy 127.0.0.1:6001
+  }
+}
+```
+
+With `handle_path`, browser requests to `/socket/socket.io` are stripped to `/socket.io` before they reach the Socket.IO server.
 
 For the backend, keep using Docker Compose on the VM host:
 

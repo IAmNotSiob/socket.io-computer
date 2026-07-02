@@ -24,7 +24,8 @@ app.use(function(req, res, next) {
   next();
 });
 
-var url = process.env.COMPUTER_IO_URL || (process.env.FLY_APP_NAME ? '' : 'http://localhost:6001');
+var url = process.env.COMPUTER_IO_URL || (process.env.VERCEL ? 'https://mail.mickai.me' : (process.env.FLY_APP_NAME ? '' : 'http://localhost:6001'));
+var ioPath = process.env.COMPUTER_IO_PATH || (process.env.VERCEL ? '/socket/socket.io' : '/socket.io');
 app.get('/', function(req, res, next) {
   if (!redis) {
     return renderIndex(res, null, 0);
@@ -43,7 +44,8 @@ function renderIndex(res, image, total) {
   res.render('index.mustache', {
     img: image ? image.toString('base64') : '',
     count: total || 0,
-    io: url
+    io: url,
+    ioPath: ioPath
   });
 }
 

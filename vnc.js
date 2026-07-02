@@ -1,13 +1,7 @@
 
-var Canvas = require('canvas');
 var Emitter = require('events').EventEmitter;
 var rfb = require('rfb2');
-var exec = require('child_process').exec;
-var Jpeg = require('jpeg').Jpeg;
-var FixedJpegStack = require('jpeg').FixedJpegStack;
-var fs = require('fs');
-
-var SS_NAME = 'ss.jpg';
+var jpeg = require('jpeg-js');
 
 module.exports = VNC;
 
@@ -24,6 +18,7 @@ function VNC(host, port) {
     host: host,
     port: port
   });
+  this.r.autoUpdate = true;
 
   var self = this;
   this.r.on('rect', this.drawRect.bind(this));
@@ -41,36 +36,41 @@ VNC.prototype.drawRect = function(rect) {
     return;
   }
 
-  var date = new Date;
-  var rgb = new Buffer(rect.width * rect.height * 3);
+  var rgba = Buffer.alloc(rect.width * rect.height * 4);
  
   for (var i = 0, o = 0; i < rect.data.length; i += 4) {
-    rgb[o++] = rect.data[i + 2];
-    rgb[o++] = rect.data[i + 1];
-    rgb[o++] = rect.data[i];
+    rgba[o++] = rect.data[i + 2];
+    rgba[o++] = rect.data[i + 1];
+    rgba[o++] = rect.data[i];
+    rgba[o++] = 255;
   }
 
-  var self = this;
-  var image = new Jpeg(rgb, rect.width, rect.height, 'rgb');
-  image.encode(function(img, err){
-    if (img) self.emit('raw', {
-      x: rect.x,
-      y: rect.y,
+  this.emit('raw', {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    image: jpeg.encode({
+      data: rgba,
       width: rect.width,
-      height: rect.height,
-      image: img
-    });
+      height: rect.height
+    }, 80).data
   });
 
   if (!this.state) {
-    // first frame
-    this.state = new FixedJpegStack(this.width, this.height, 'rgb');
-    this.state.push(rgb, 0, 0, rect.width, rect.height);
-  } else {
-    this.state.push(rgb, rect.x, rect.y, rect.width, rect.height);
+    this.state = Buffer.alloc(this.width * this.height * 4);
   }
 
-  this.state.encode(function(img, err) {
-    if (img) self.emit('frame', img);
-  });
+  for (var y = 0; y < rect.height; y++) {
+    var sourceStart = y * rect.width * 4;
+    var sourceEnd = sourceStart + rect.width * 4;
+    var targetStart = ((rect.y + y) * this.width + rect.x) * 4;
+    rgba.copy(this.state, targetStart, sourceStart, sourceEnd);
+  }
+
+  this.emit('frame', jpeg.encode({
+    data: this.state,
+    width: this.width,
+    height: this.height
+  }, 80).data);
 };

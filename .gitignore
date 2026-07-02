@@ -25,3 +25,9 @@ build/Release
 node_modules
 
 .DS_STORE
+
+# VM media
+images/
+*.iso
+*.img
+*.qcow2

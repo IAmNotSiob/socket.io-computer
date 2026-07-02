@@ -46,6 +46,43 @@ $ COMPUTER_IMG=winxp.img node emu-runner.js
 
 Then point your browser to `http://localhost:5000`.
 
+## Docker
+
+Create a local `images` directory with the disk image and installer ISO
+expected by `docker-compose.yml`:
+
+```bash
+mkdir -p images
+qemu-img create -f qcow2 images/disk.qcow2 3G
+# put your installer at images/install.iso
+```
+
+Then run the stack:
+
+```bash
+docker compose up --build
+```
+
+The web UI is exposed on `http://localhost:5000` and Socket.IO is exposed on
+`http://localhost:6001`. The QEMU service binds VNC and monitor ports inside
+the Compose network; the emulator service connects to them as `qemu:5900` and
+`qemu:4444`.
+
+On a remote VPS, set `COMPUTER_IO_URL` to a browser-reachable hostname or IP
+instead of `localhost`:
+
+```bash
+COMPUTER_IO_URL=http://YOUR_VPS_IP_OR_HOSTNAME:6001 docker compose up --build
+```
+
+If port `5000` is already in use on the host, remap it:
+
+```bash
+COMPUTER_WEB_HOST_PORT=55000 \
+COMPUTER_IO_URL=http://YOUR_VPS_IP_OR_HOSTNAME:6001 \
+docker compose up --build
+```
+
 ## License
 
 MIT

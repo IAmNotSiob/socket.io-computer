@@ -1,10 +1,7 @@
 
 var Emitter = require('events').EventEmitter;
-var sys = require('sys');
-var fs = require('fs');
-var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 var VNC = require('./vnc');
-var Canvas = require('canvas');
 var debug = require('debug')('computer:computer');
 var net = require('net');
 
@@ -25,7 +22,7 @@ Computer.prototype.__proto__ = Emitter.prototype;
 
 Computer.prototype.closed = function() {
   this.running = false;
-  setTimeout(this.run, 100);
+  setTimeout(this.run.bind(this), 100);
   return;
 };
 
@@ -71,9 +68,9 @@ Computer.prototype.run = function() {
 Computer.prototype.snapshot = function(name) {
   if (!this.running || !this.img) return;
 
-  var command = 'qemu-img create -f qcow2 -b ' + this.img + ' ' + name;
-  exec(command, function(error, stdout, stderr) {
-    if (!error) {
+  var child = spawn('qemu-img', ['create', '-f', 'qcow2', '-b', this.img, name]);
+  child.on('close', function(code) {
+    if (code === 0) {
       console.log('saved emu to ' + name);
     }
   });
@@ -91,6 +88,7 @@ Computer.prototype.pointer = function(x, y, state) {
 
 Computer.prototype.key = function(key) {
   if (!this.running) return this;
+  if (!isValidKey(key)) return this;
   var command = 'sendkey ' + key + '\n';
   this.tcpWrite(command);
 };
@@ -110,3 +108,7 @@ Computer.prototype.tcpWrite = function(command) {
     this.closed();
   }
 };
+
+function isValidKey(key) {
+  return typeof key == 'string' && /^[a-z0-9_+,-]+$/.test(key) && key.length <= 80;
+}

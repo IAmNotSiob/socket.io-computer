@@ -1,5 +1,4 @@
 
-var browserify = require('browserify-middleware');
 var mustache = require('mustache-express');
 var express = require('express');
 var app = express();
@@ -14,10 +13,7 @@ console.log('listening on *:' + port);
 
 app.engine('mustache', mustache());
 app.set('views', __dirname + '/views');
-
-if ('development' == process.env.NODE_ENV) {
-  app.use('/build.js', browserify('./client/main.js'));
-}
+app.set('view engine', 'mustache');
 
 app.use(express.static(__dirname + '/public'));
 

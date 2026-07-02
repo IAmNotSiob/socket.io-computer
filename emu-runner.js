@@ -1,20 +1,15 @@
-var forever = require('forever-monitor');
+var fork = require('child_process').fork;
+var path = require('path');
 
 function startEmu() {
-  var child = new (forever.Monitor)('emu.js', {
-      max: 1,
-      silent: false,
-      options: []
+  var child = fork(path.join(__dirname, 'emu.js'), [], {
+    stdio: 'inherit'
   });
 
-  child.on('exit', function () {
-    console.log('THE EMULATOR DIED');
-    setTimeout(function() {
-      startEmu();
-    }, 2000);
+  child.on('exit', function(code, signal) {
+    console.log('emulator exited', {code: code, signal: signal});
+    setTimeout(startEmu, 2000);
   });
-
-  child.start();
 }
 
 startEmu();

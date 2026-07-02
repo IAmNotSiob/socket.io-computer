@@ -3,14 +3,12 @@ var fs = require('fs');
 var Computer = require('./computer');
 var crypto = require('crypto');
 var debug = require('debug')('computer:worker');
-var turn = require('./turn');
 
 process.title = 'socket.io-computer-emulator';
 
 // redis
 var redis = require('./redis').emu();
 var sub = require('./redis').emu();
-var io = require('socket.io-emitter')(redis, {key: 'xpemu'});
 
 var saveInterval = null;
 
@@ -30,7 +28,13 @@ function load() {
   var state;
 
   emu.on('raw', function(frame) {
-    io.emit('raw', frame);
+    redis.publish('computer:raw', JSON.stringify({
+      x: frame.x,
+      y: frame.y,
+      width: frame.width,
+      height: frame.height,
+      image: frame.image.toString('base64')
+    }));
   });
 
   emu.on('frame', function(buf) {
@@ -38,7 +42,7 @@ function load() {
   });
 
   emu.on('copy', function(rect) {
-    io.emit('copy', rect);
+    redis.publish('computer:copy', JSON.stringify(rect));
   });
 
   setTimeout(function() {
@@ -58,25 +62,19 @@ function load() {
 // controlling
 sub.subscribe('computer:keydown');
 sub.subscribe('computer:pointer');
-sub.subscribe('computer:turn');
 
 sub.on('message', function(channel, data) {
   data = data.toString();
 
   if ('computer:keydown' == channel) {
-    // data is a key for send_press
-    emu.key(data, 0);
+    var key = data.split(':').slice(1).join(':');
+    emu.key(key, 0);
   } else if ('computer:pointer' == channel) {
-    // absolute x and y of client
     var split = data.split(':');
-    var x = parseInt(split[0], 10);
-    var y = parseInt(split[1], 10);
-    var state = parseInt(split[2], 10);
+    var x = parseInt(split[1], 10);
+    var y = parseInt(split[2], 10);
+    var state = parseInt(split[3], 10);
     emu.pointer(x, y, state);
-  } else if ('computer:turn' == channel) {
-    // turn request (data is socket.id)
-    turn.push(data);
-    turn.checkQueue(true);
   }
 });
 

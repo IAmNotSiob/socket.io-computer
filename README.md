@@ -6,6 +6,8 @@ controlling it.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer&env=COMPUTER_IO_URL&envDescription=HTTPS%20Socket.IO%20URL%20for%20the%20Docker%20VM%20backend&envLink=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer%23vercel-demo)
 
+Live demo: https://socket-io-computer-beta.vercel.app/
+
 It works by running [qemu](http://wiki.qemu.org/Main_Page) on the
 server-side and streaming the image binary data to the browser.
 

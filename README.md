@@ -4,6 +4,8 @@
 A collaborative virtual machine where players take turns in
 controlling it.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FIAmNotSiob%2Fsocket.io-computer)
+
 It works by running [qemu](http://wiki.qemu.org/Main_Page) on the
 server-side and streaming the image binary data to the browser.
 

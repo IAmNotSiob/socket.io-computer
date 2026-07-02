@@ -30,6 +30,7 @@ init(img, iso);
 function init(img, iso) {
   var command = 'qemu-system-x86_64';
   var args = [
+    '-accel', process.env.COMPUTER_ACCEL || 'tcg',
     '-m', '1024',
     '-vnc', hostName + ':' + displayNum,
     '-net', 'nic,model=rtl8139',

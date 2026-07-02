@@ -42,7 +42,6 @@ services:
     command: npm run start:qemu
     restart: unless-stopped
     environment:
-      COMPUTER_ISO: /data/install.iso
       COMPUTER_IMG: /data/disk.qcow2
       COMPUTER_VNC_HOST: 0.0.0.0
       COMPUTER_DISPLAY: "0"

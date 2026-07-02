@@ -24,7 +24,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-var url = process.env.COMPUTER_IO_URL || 'http://localhost:6001';
+var url = process.env.COMPUTER_IO_URL || (process.env.FLY_APP_NAME ? '' : 'http://localhost:6001');
 app.get('/', function(req, res, next) {
   if (!redis) {
     return renderIndex(res, null, 0);

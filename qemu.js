@@ -3,12 +3,6 @@ var spawn = require('child_process').spawn;
 var join = require('path').join;
 var debug = require('debug')('computer:qemu');
 
-if (!process.env.COMPUTER_ISO) {
-  console.log('You must specify the ENV variable `COMPUTER_ISO` ' +
-      'to location of iso file to broadcast.');
-  process.exit(1);
-}
-
 if (!process.env.COMPUTER_IMG) {
   console.log('Must specificy the ENV variable `COMPUTER_IMG` ' +
     'to location of disk image to use');
@@ -22,9 +16,9 @@ var hostName = process.env.COMPUTER_VNC_HOST || '127.0.0.1';
 var tcp = process.env.COMPUTER_TCP || '127.0.0.1:4444';
 
 // iso
-var iso = process.env.COMPUTER_ISO;
-if ('/' != iso[0]) iso = join(process.cwd(), iso);
-debug('iso %s', iso);
+var iso = process.env.COMPUTER_ISO || null;
+if (iso && '/' != iso[0]) iso = join(process.cwd(), iso);
+if (iso) debug('iso %s', iso);
 
 // img
 var img = process.env.COMPUTER_IMG;
@@ -42,10 +36,13 @@ function init(img, iso) {
     '-net', 'user',
     '-usbdevice', 'tablet',
     '-hda', img,
-    '-cdrom', iso,
     '-monitor', 'tcp:' + tcp + ',server,nowait',
     '-boot', 'c'
   ];
+
+  if (iso) {
+    args.splice(args.length - 2, 0, '-cdrom', iso);
+  }
   var options = {
     stdio: 'inherit'
   };

@@ -16,6 +16,7 @@ RUN apt-get update \
     ca-certificates \
     qemu-system-x86 \
     qemu-utils \
+    redis-server \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -23,6 +24,6 @@ ENV NODE_ENV=production
 
 COPY --from=build /app /app
 
-EXPOSE 5000 6001
+EXPOSE 5000 6001 8080
 
 CMD ["node", "app.js"]

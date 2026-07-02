@@ -85,6 +85,35 @@ COMPUTER_IO_URL=http://YOUR_VPS_IP_OR_HOSTNAME:6001 \
 docker compose up --build
 ```
 
+## Fly.io
+
+Fly.io can host the real demo backend as one always-on Machine. The Fly start
+script runs Redis, the web server, Socket.IO, presence, QEMU, and the emulator
+worker in one container, then exposes a single HTTPS endpoint through Fly.
+
+Create the app and volume:
+
+```bash
+fly launch --no-deploy
+fly volumes create computer_data --size 10 --region iad
+```
+
+Deploy it:
+
+```bash
+fly deploy
+```
+
+The app expects the VM disk at `/data/disk.qcow2`. If it is missing, the start
+script creates a blank disk, but a blank disk will not boot a useful OS. Put a
+prepared qcow2 disk there for an actual demo. An installer ISO at
+`/data/install.iso` is optional; when it is absent QEMU boots from disk only.
+
+Fly serves the app over HTTPS, and `/socket.io` is proxied to the internal
+Socket.IO worker, so `COMPUTER_IO_URL` can be omitted for a pure Fly deployment.
+For a Vercel frontend pointed at Fly, set Vercel `COMPUTER_IO_URL` to your Fly
+app URL, for example `https://socket-io-computer.fly.dev`.
+
 ## Vercel demo
 
 Vercel can host the public web entrypoint for a real demo, but the VM backend

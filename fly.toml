@@ -1,0 +1,30 @@
+app = "socket-io-computer"
+primary_region = "iad"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  COMPUTER_IMG = "/data/disk.qcow2"
+  COMPUTER_ISO = "/data/install.iso"
+  COMPUTER_DISK_SIZE = "3G"
+
+[processes]
+  app = "npm run start:fly"
+
+[[mounts]]
+  source = "computer_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "2gb"
